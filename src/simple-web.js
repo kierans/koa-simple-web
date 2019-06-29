@@ -13,7 +13,7 @@ const Koa = require("koa");
  * When referring to 'middleware' any function that conforms to Koa's Middleware function syntax
  * can be used.
  */
-class Web {
+class SimpleWeb {
 	/**
 	 * @param {SimpleWebServerConfig} config
 	 */
@@ -62,4 +62,4 @@ class Web {
 	}
 }
 
-module.exports = Web;
+module.exports = SimpleWeb;
