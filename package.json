@@ -14,6 +14,10 @@
 	],
 	"author": "Kieran Simpson",
 	"license": "MIT",
+	"files": [
+		"src",
+		"README.md"
+	],
 	"devDependencies": {
 		"hamjest": "^3.2.3",
 		"koa-router": "^7.4.0",
