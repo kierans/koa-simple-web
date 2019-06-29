@@ -11,7 +11,7 @@ $ npm install koa-simple-web
 ```javascript
 const web = new SimpleWeb({ port: 8080 });
 
-web.route(new (require("koa-router")));
+web.route(new (require("koa-router"))());
 web.use(async (ctx) => {});
 
 await web.start();
