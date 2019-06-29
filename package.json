@@ -1,0 +1,17 @@
+{
+	"name": "koa-simple-web",
+	"version": "1.0.0",
+	"description": "A simple web server using Koa",
+	"main": "src/web.js",
+	"scripts": {
+		"test": "mocha test"
+	},
+	"keywords": [
+		"koa",
+		"http",
+		"middleware",
+		"server"
+	],
+	"author": "Kieran Simpson",
+	"license": "MIT"
+}
