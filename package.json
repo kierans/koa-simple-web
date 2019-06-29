@@ -18,6 +18,10 @@
 		"src",
 		"README.md"
 	],
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:kierans/koa-simple-web.git"
+	},
 	"devDependencies": {
 		"hamjest": "^3.2.3",
 		"koa-router": "^7.4.0",
