@@ -2,7 +2,7 @@
 	"name": "koa-simple-web",
 	"version": "1.0.0",
 	"description": "A simple web server using Koa",
-	"main": "src/web.js",
+	"main": "src/simple-web.js",
 	"scripts": {
 		"test": "mocha test"
 	},
@@ -13,5 +13,15 @@
 		"server"
 	],
 	"author": "Kieran Simpson",
-	"license": "MIT"
+	"license": "MIT",
+	"devDependencies": {
+		"hamjest": "^3.2.3",
+		"koa-router": "^7.4.0",
+		"mocha": "^6.1.4",
+		"superagent": "^5.1.0",
+		"superjest": "^0.1.0"
+	},
+	"dependencies": {
+		"koa": "^2.7.0"
+	}
 }
