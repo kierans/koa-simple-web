@@ -82,6 +82,36 @@ describe("simple web", function() {
 				});
 		});
 	});
+
+	describe("context", function() {
+		beforeEach(async function() {
+			const router = new Router();
+			web.route(router);
+
+			router.get("/name", async (ctx) => {
+				ctx.status = 200;
+				ctx.body = ctx.name();
+			});
+
+			await web.start();
+		});
+
+		it("should add to context", function(done) {
+			const name = "Bruce Wayne";
+
+			web.addContext("name", function() {
+				return name;
+			});
+
+			superagent.get(`http://localhost:${port}/name`)
+				.end((error, response) => {
+					assertThat(response, hasStatusCode(200));
+					assertThat(response.text, is(name));
+
+					done();
+				});
+		});
+	});
 });
 
 function givenRootRoute() {

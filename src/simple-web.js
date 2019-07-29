@@ -60,6 +60,16 @@ class SimpleWeb {
 	use(middleware) {
 		this._web.use(middleware);
 	}
+
+	/**
+	 * Adds to Koa's context object.
+	 *
+	 * @param {string} name
+	 * @param {Function} fn
+	 */
+	addContext(name, fn) {
+		this._web.context[name] = fn;
+	}
 }
 
 module.exports = SimpleWeb;
