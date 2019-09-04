@@ -21,9 +21,33 @@ describe("simple web", function() {
 		await web.stop();
 	});
 
-	it("should not throw error stopping unstarted component", async function() {
-		await web.stop();
-		await web.start();
+	describe("lifecycle", function() {
+		it("should not throw error stopping unstarted component", async function() {
+			await web.stop();
+			await web.start();
+		});
+
+		it("should only be able to be started once", async function() {
+			await web.start();
+
+			return web.start().then(
+					() => { throw new Error("Expected error to be thrown") },
+
+					// catch the "thrown" error.
+					() => {}
+			)
+		});
+
+		it("should handle being stopped multiple times", async function() {
+			await web.stop();
+			await web.stop();
+		});
+
+		it("should handle being restarted again", async function() {
+			await web.start();
+			await web.stop();
+			await web.start();
+		})
 	});
 
 	describe("routes", function() {

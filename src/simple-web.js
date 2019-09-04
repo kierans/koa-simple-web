@@ -24,22 +24,34 @@ class SimpleWeb {
 	}
 
 	start() {
-		this._server = this._web.listen(this._config.port);
-
-		return new Promise((resolve) => {
-			this._server.on("listening", resolve);
+		return new Promise((resolve, reject) => {
+			if (!this._server) {
+				this._server = this._web.listen(this._config.port);
+				this._server.on("listening", resolve);
+			}
+			else {
+				reject(new Error("Server already started"));
+			}
 		});
 	}
 
 	stop() {
-		if (this._server) {
-			return new Promise((resolve, reject) => {
-				this._server.on("close", resolve);
+		return new Promise((resolve, reject) => {
+			if (this._server) {
+				this._server.on("close", () => {
+					this._server = null;
+
+					resolve();
+				});
+
 				this._server.on("error", reject);
 
 				this._server.close()
-			});
-		}
+			}
+			else {
+				resolve();
+			}
+		});
 	}
 
 	/**
