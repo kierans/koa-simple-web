@@ -2,9 +2,23 @@
 
 const Koa = require("koa");
 
+const PASSTHROUGH_CONFIG_KEYS = [
+	"maxHeadersCount",
+	"headersTimeout",
+	"timeout",
+	"keepAliveTimeout"
+];
+
 /**
  * @typedef {Object} SimpleWebServerConfig
+ *
+ * See this bug related to the timeouts: https://github.com/nodejs/node/issues/27363
+ *
  * @property {number} port The port to listen on
+ * @property [number] maxHeadersCount {@link https://nodejs.org/docs/latest/api/http.html#http_server_maxheaderscount}
+ * @property [number] headersTimeout {@link https://nodejs.org/docs/latest/api/http.html#http_server_headerstimeout}
+ * @property [number] timeout {@link https://nodejs.org/docs/latest/api/http.html#http_server_timeout}
+ * @property [number] keepAliveTimeout {@link https://nodejs.org/docs/latest/api/http.html#http_server_keepalivetimeout}
  */
 
 /**
@@ -27,6 +41,13 @@ class SimpleWeb {
 		return new Promise((resolve, reject) => {
 			if (!this._server) {
 				this._server = this._web.listen(this._config.port);
+
+				PASSTHROUGH_CONFIG_KEYS.forEach((key) => {
+					if (typeof this._config[key] !== 'undefined') {
+						this._server[key] = this._config[key];
+					}
+				});
+
 				this._server.on("listening", resolve);
 			}
 			else {
