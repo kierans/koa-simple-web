@@ -3,18 +3,30 @@
 const Router = require("koa-router");
 const superagent = require("superagent");
 
-const { assertThat, equalTo, is } = require("hamjest");
+const { assertThat, equalTo, is, not, defined } = require("hamjest");
 const { hasHeader, hasStatusCode } = require("superjest");
 
 const SimpleWeb = require("../src/simple-web");
 
-const port = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
+const MAX_HEADERS_COUNT = 1111;
+const HEADERS_TIMEOUT = 2222;
+const TIMEOUT = 3333;
+const KEEP_ALIVE_TIMEOUT = 4444;
+
+const config = {
+	port: PORT,
+	maxHeadersCount: MAX_HEADERS_COUNT,
+	headersTimeout: HEADERS_TIMEOUT,
+	timeout: TIMEOUT,
+	keepAliveTimeout: KEEP_ALIVE_TIMEOUT
+};
 
 describe("simple web", function() {
 	let web;
 
 	beforeEach(async function() {
-		web = new SimpleWeb({ port: port });
+		web = new SimpleWeb(config);
 	});
 
 	afterEach(async function() {
@@ -50,6 +62,53 @@ describe("simple web", function() {
 		})
 	});
 
+	describe("config", function() {
+		["maxHeadersCount", "headersTimeout", "timeout", "keepAliveTimeout"].forEach((key) => {
+			it(`should set ${key}`, async function() {
+				// Configuration should be synchronous, not wait for the promise to settle
+				const promise = web.start();
+
+				try {
+					assertThat(web._server[key], is(config[key]));
+				}
+				finally {
+					await promise;
+				}
+			});
+
+			it(`should set ${key} to zero`, async function() {
+				const alteredConfig = Object.assign({}, config);
+				alteredConfig[key] = 0;
+
+				web = new SimpleWeb(alteredConfig);
+				const promise = web.start();
+
+				try {
+					assertThat(web._server[key], is(0));
+				}
+				finally {
+					await promise;
+				}
+			});
+
+			it(`should not set ${key} if undefined`, async function() {
+				const alteredConfig = Object.assign({}, config);
+				delete alteredConfig[key];
+
+				web = new SimpleWeb(alteredConfig);
+				const promise = web.start();
+
+				try {
+					assertThat(web._server[key], defined());
+					assertThat(web._server[key], not(config[key]));
+				}
+				finally {
+					await promise;
+				}
+			});
+		});
+	});
+
 	describe("routes", function() {
 		beforeEach(async function() {
 			web.route(givenRootRoute());
@@ -58,7 +117,7 @@ describe("simple web", function() {
 		});
 
 		it("should mount routes", function(done) {
-			superagent.get(`http://localhost:${port}`)
+			superagent.get(`http://localhost:${PORT}`)
 				.end((error, response) => {
 					assertThat(response, hasStatusCode(200));
 					assertThat(response.text, is("OK"));
@@ -68,7 +127,7 @@ describe("simple web", function() {
 		});
 
 		it("should only allow defined methods", function(done) {
-			superagent.post(`http://localhost:${port}`)
+			superagent.post(`http://localhost:${PORT}`)
 				.end((error, response) => {
 					assertThat(response, hasStatusCode(405));
 
@@ -97,7 +156,7 @@ describe("simple web", function() {
 		});
 
 		it("should allow arbitrary middleware", function(done) {
-			superagent.get(`http://localhost:${port}`)
+			superagent.get(`http://localhost:${PORT}`)
 				.end((error, response) => {
 					assertThat(response, hasStatusCode(200));
 					assertThat(response, hasHeader("x-foo", equalTo("bar")));
@@ -127,7 +186,7 @@ describe("simple web", function() {
 				return name;
 			});
 
-			superagent.get(`http://localhost:${port}/name`)
+			superagent.get(`http://localhost:${PORT}/name`)
 				.end((error, response) => {
 					assertThat(response, hasStatusCode(200));
 					assertThat(response.text, is(name));
