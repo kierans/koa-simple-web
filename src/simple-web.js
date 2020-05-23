@@ -41,13 +41,14 @@ class SimpleWeb {
 
 	start() {
 		return new Promise((resolve, reject) => {
-			if (!this._server) {
-				this._createServer();
-			}
-			else if (this._server.listening) {
+			if (this._server && this._server.listening) {
 				reject(new Error("Server already started"));
 
 				return;
+			}
+
+			if (!this._server) {
+				this._createServer();
 			}
 			else {
 				this._listenOnExistingServer();

@@ -35,58 +35,60 @@ describe("simple web", function() {
 		await web.stop();
 	});
 
-	function lifecycleTests(getServer) {
-		it("should not throw error stopping unstarted component", async function() {
-			await web.stop();
-			await web.start();
+	describe("lifecycle", function() {
+		function lifecycleTests(getServer) {
+			it("should not throw error stopping unstarted component", async function() {
+				await web.stop();
+				await web.start();
 
-			assertThat(getServer().listening, is(true));
+				assertThat(getServer().listening, is(true));
+			});
+
+			it("should only be able to be started once", async function() {
+				await web.start();
+
+				return web.start().then(
+						() => { throw new Error("Expected error to be thrown") },
+
+						// catch the "thrown" error.
+						() => {}
+				)
+			});
+
+			it("should handle being stopped multiple times", async function() {
+				await web.stop();
+				await web.stop();
+			});
+
+			it("should handle being restarted again", async function() {
+				await web.start();
+				await web.stop();
+
+				assertThat(getServer().listening, is(false));
+
+				await web.start();
+
+				assertThat(getServer().listening, is(true));
+			})
+		}
+
+		describe("with no server provided", function() {
+			lifecycleTests(() => web._server);
 		});
 
-		it("should only be able to be started once", async function() {
-			await web.start();
+		describe("with server provided", function() {
+			let server;
 
-			return web.start().then(
-					() => { throw new Error("Expected error to be thrown") },
+			beforeEach(function() {
+				const alteredConfig = Object.assign({}, config);
+				alteredConfig.port = TLS_PORT;
 
-					// catch the "thrown" error.
-					() => {}
-			)
+				server = https.createServer();
+				web = new SimpleWeb(alteredConfig, server);
+			});
+
+			lifecycleTests(() => server);
 		});
-
-		it("should handle being stopped multiple times", async function() {
-			await web.stop();
-			await web.stop();
-		});
-
-		it("should handle being restarted again", async function() {
-			await web.start();
-			await web.stop();
-
-			assertThat(getServer().listening, is(false));
-
-			await web.start();
-
-			assertThat(getServer().listening, is(true));
-		})
-	}
-
-	describe("lifecycle with no server provided", function() {
-		lifecycleTests(() => web._server);
-	});
-
-	describe("lifecycle with server provided", function() {
-		let server;
-
-		beforeEach(function() {
-			const alteredConfig = Object.assign({}, config);
-			alteredConfig.port = TLS_PORT;
-
-			server = https.createServer();
-			web = new SimpleWeb(alteredConfig, server);
-		});
-
-		lifecycleTests(() => server);
 	});
 
 	describe("config", function() {
