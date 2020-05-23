@@ -4,7 +4,7 @@ const https = require("https");
 const Router = require("koa-router");
 const superagent = require("superagent");
 
-const { assertThat, equalTo, is, not, defined } = require("hamjest");
+const { assertThat, equalTo, is } = require("hamjest");
 const { hasHeader, hasStatusCode } = require("superjest");
 
 const SimpleWeb = require("../src/simple-web");
@@ -88,53 +88,6 @@ describe("simple web", function() {
 			});
 
 			lifecycleTests(() => server);
-		});
-	});
-
-	describe("config", function() {
-		["maxHeadersCount", "headersTimeout", "timeout", "keepAliveTimeout"].forEach((key) => {
-			it(`should set ${key}`, async function() {
-				// Configuration should be synchronous, not wait for the promise to settle
-				const promise = web.start();
-
-				try {
-					assertThat(web._server[key], is(config[key]));
-				}
-				finally {
-					await promise;
-				}
-			});
-
-			it(`should set ${key} to zero`, async function() {
-				const alteredConfig = Object.assign({}, config);
-				alteredConfig[key] = 0;
-
-				web = new SimpleWeb(alteredConfig);
-				const promise = web.start();
-
-				try {
-					assertThat(web._server[key], is(0));
-				}
-				finally {
-					await promise;
-				}
-			});
-
-			it(`should not set ${key} if undefined`, async function() {
-				const alteredConfig = Object.assign({}, config);
-				delete alteredConfig[key];
-
-				web = new SimpleWeb(alteredConfig);
-				const promise = web.start();
-
-				try {
-					assertThat(web._server[key], defined());
-					assertThat(web._server[key], not(config[key]));
-				}
-				finally {
-					await promise;
-				}
-			});
 		});
 	});
 
