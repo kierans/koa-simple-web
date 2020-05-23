@@ -1,5 +1,6 @@
 "use strict";
 
+const https = require("https");
 const Router = require("koa-router");
 const superagent = require("superagent");
 
@@ -9,6 +10,7 @@ const { hasHeader, hasStatusCode } = require("superjest");
 const SimpleWeb = require("../src/simple-web");
 
 const PORT = process.env.PORT || 8080;
+const TLS_PORT = process.env.TLS_PORT || 43434;
 const MAX_HEADERS_COUNT = 1111;
 const HEADERS_TIMEOUT = 2222;
 const TIMEOUT = 3333;
@@ -33,10 +35,12 @@ describe("simple web", function() {
 		await web.stop();
 	});
 
-	describe("lifecycle", function() {
+	function lifecycleTests(getServer) {
 		it("should not throw error stopping unstarted component", async function() {
 			await web.stop();
 			await web.start();
+
+			assertThat(getServer().listening, is(true));
 		});
 
 		it("should only be able to be started once", async function() {
@@ -58,8 +62,31 @@ describe("simple web", function() {
 		it("should handle being restarted again", async function() {
 			await web.start();
 			await web.stop();
+
+			assertThat(getServer().listening, is(false));
+
 			await web.start();
+
+			assertThat(getServer().listening, is(true));
 		})
+	}
+
+	describe("lifecycle with no server provided", function() {
+		lifecycleTests(() => web._server);
+	});
+
+	describe("lifecycle with server provided", function() {
+		let server;
+
+		beforeEach(function() {
+			const alteredConfig = Object.assign({}, config);
+			alteredConfig.port = TLS_PORT;
+
+			server = https.createServer();
+			web = new SimpleWeb(alteredConfig, server);
+		});
+
+		lifecycleTests(() => server);
 	});
 
 	describe("config", function() {

@@ -30,9 +30,11 @@ const PASSTHROUGH_CONFIG_KEYS = [
 class SimpleWeb {
 	/**
 	 * @param {SimpleWebServerConfig} config
+	 * @param {http.Server|https.Server} [server]
 	 */
-	constructor(config) {
+	constructor(config, server) {
 		this._config = config;
+		this._server = server;
 
 		this._web = new Koa()
 	}
@@ -40,27 +42,32 @@ class SimpleWeb {
 	start() {
 		return new Promise((resolve, reject) => {
 			if (!this._server) {
-				this._server = this._web.listen(this._config.port);
+				this._createServer();
+			}
+			else if (this._server.listening) {
+				reject(new Error("Server already started"));
 
-				PASSTHROUGH_CONFIG_KEYS.forEach((key) => {
-					if (typeof this._config[key] !== 'undefined') {
-						this._server[key] = this._config[key];
-					}
-				});
-
-				this._server.on("listening", resolve);
+				return;
 			}
 			else {
-				reject(new Error("Server already started"));
+				this._listenOnExistingServer();
 			}
+
+			PASSTHROUGH_CONFIG_KEYS.forEach((key) => {
+				if (typeof this._config[key] !== 'undefined') {
+					this._server[key] = this._config[key];
+				}
+			});
+
+			this._server.on("listening", resolve);
 		});
 	}
 
 	stop() {
 		return new Promise((resolve, reject) => {
-			if (this._server) {
+			if (this._server && this._server.listening) {
 				this._server.on("close", () => {
-					this._server = null;
+					this._server.off("error", reject);
 
 					resolve();
 				});
@@ -103,6 +110,16 @@ class SimpleWeb {
 	addContext(name, fn) {
 		this._web.context[name] = fn;
 	}
+
+	_createServer() {
+		this._server = this._web.listen(this._config.port);
+	}
+
+	_listenOnExistingServer() {
+		this._server.on('request', this._web.callback());
+		this._server.listen(this._config.port);
+	}
+
 }
 
 module.exports = SimpleWeb;
